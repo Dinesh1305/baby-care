@@ -7,6 +7,7 @@ import History from './components/History';
 import Settings from './components/Settings';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import Profile from './components/Profile'; // <-- Added Profile import
 
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -47,6 +48,8 @@ function App() {
         return <Dashboard />;
       case 'history':
         return <History />;
+      case 'profile':          // <-- Added Profile case
+        return <Profile />;
       case 'settings':
         return <Settings />;
       default:

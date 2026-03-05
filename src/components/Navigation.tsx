@@ -1,4 +1,4 @@
-import { Home, History, Settings, Baby } from 'lucide-react';
+import { Home, History, Settings, Baby, User } from 'lucide-react';
 
 interface NavigationProps {
   currentPage: string;
@@ -9,6 +9,7 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'history', label: 'History', icon: History },
+    { id: 'profile', label: 'Profile', icon: User }, // Added the Profile tab here
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
