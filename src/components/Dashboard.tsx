@@ -1,6 +1,8 @@
+// src/components/Dashboard.tsx
 import { useEffect, useState } from 'react';
 import { Baby, Volume2, Moon, Bell } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { collection, query, orderBy, limit, onSnapshot, doc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import type { SystemStatus, CryEvent, BabyStatus } from '../types/database';
 
 export default function Dashboard() {
@@ -10,82 +12,48 @@ export default function Dashboard() {
   const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
-    fetchStatus();
-    fetchRecentEvents();
-
-    const statusChannel = supabase
-      .channel('system_status_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'system_status',
-        },
-        (payload) => {
-          setSystemStatus(payload.new as SystemStatus);
-          if ((payload.new as SystemStatus).current_status === 'crying') {
-            triggerAlert();
-          }
+    // Listen to the current system status document in Firestore
+    const statusUnsubscribe = onSnapshot(doc(db, 'system_status', 'current'), (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const data = docSnapshot.data() as SystemStatus;
+        setSystemStatus(data);
+        if (data.current_status === 'crying') {
+          triggerAlert();
         }
-      )
-      .subscribe();
+      }
+      setIsLoading(false);
+    });
 
-    const eventsChannel = supabase
-      .channel('cry_events_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'cry_events',
-        },
-        (payload) => {
-          setRecentEvents((prev) => [payload.new as CryEvent, ...prev].slice(0, 5));
-        }
-      )
-      .subscribe();
+    // Listen to recent cry events collection in Firestore
+    const eventsQuery = query(
+      collection(db, 'cry_events'),
+      orderBy('detected_at', 'desc'),
+      limit(5)
+    );
+    
+    const eventsUnsubscribe = onSnapshot(eventsQuery, (querySnapshot) => {
+      const events = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as CryEvent[];
+      setRecentEvents(events);
+    });
 
+    // Cleanup listeners on unmount
     return () => {
-      supabase.removeChannel(statusChannel);
-      supabase.removeChannel(eventsChannel);
+      statusUnsubscribe();
+      eventsUnsubscribe();
     };
   }, []);
 
-  const fetchStatus = async () => {
-    const { data, error } = await supabase
-      .from('system_status')
-      .select('*')
-      .single();
-
-    if (!error && data) {
-      setSystemStatus(data);
-    }
-    setIsLoading(false);
-  };
-
-  const fetchRecentEvents = async () => {
-    const { data, error } = await supabase
-      .from('cry_events')
-      .select('*')
-      .order('detected_at', { ascending: false })
-      .limit(5);
-
-    if (!error && data) {
-      setRecentEvents(data);
-    }
-  };
-
   const triggerAlert = () => {
     setShowAlert(true);
-
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('Baby is Crying!', {
         body: 'Your baby needs attention',
         icon: '/baby-icon.png',
       });
     }
-
     setTimeout(() => setShowAlert(false), 5000);
   };
 
@@ -98,41 +66,21 @@ export default function Dashboard() {
   const getStatusConfig = (status: BabyStatus) => {
     switch (status) {
       case 'sleeping':
-        return {
-          icon: Moon,
-          color: 'bg-blue-100 text-blue-600',
-          borderColor: 'border-blue-300',
-          label: 'Sleeping',
-        };
+        return { icon: Moon, color: 'bg-blue-100 text-blue-600', borderColor: 'border-blue-300', label: 'Sleeping' };
       case 'crying':
-        return {
-          icon: Bell,
-          color: 'bg-red-100 text-red-600',
-          borderColor: 'border-red-300',
-          label: 'Crying',
-        };
+        return { icon: Bell, color: 'bg-red-100 text-red-600', borderColor: 'border-red-300', label: 'Crying' };
       case 'noise_detected':
-        return {
-          icon: Volume2,
-          color: 'bg-yellow-100 text-yellow-600',
-          borderColor: 'border-yellow-300',
-          label: 'Noise Detected',
-        };
+        return { icon: Volume2, color: 'bg-yellow-100 text-yellow-600', borderColor: 'border-yellow-300', label: 'Noise Detected' };
     }
   };
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString();
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
+  const formatTime = (dateString: string) => new Date(dateString).toLocaleTimeString();
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleString();
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-gray-600">Loading...</div>
+        <div className="text-lg text-gray-600">Loading Dashboard...</div>
       </div>
     );
   }
@@ -217,6 +165,8 @@ export default function Dashboard() {
             <div className="space-y-3">
               {recentEvents.map((event) => {
                 const eventConfig = getStatusConfig(event.status);
+                // Ensure eventConfig is defined before trying to access its icon
+                if (!eventConfig) return null; 
                 const EventIcon = eventConfig.icon;
                 return (
                   <div
