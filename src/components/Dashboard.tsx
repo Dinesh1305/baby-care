@@ -2,17 +2,28 @@
 import { useEffect, useState } from 'react';
 import { Baby, Volume2, Moon, Bell } from 'lucide-react';
 import { collection, query, orderBy, limit, onSnapshot, doc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, auth } from '../lib/firebase'; // Added auth import
 import type { SystemStatus, CryEvent, BabyStatus } from '../types/database';
 
 export default function Dashboard() {
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [recentEvents, setRecentEvents] = useState<CryEvent[]>([]);
+  const [babyName, setBabyName] = useState<string | null>(null); // New state for baby name
   const [isLoading, setIsLoading] = useState(true);
   const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
-    // Listen to the current system status document in Firestore
+    // 1. Listen to the baby profile document
+    let profileUnsubscribe = () => {};
+    if (auth.currentUser) {
+      profileUnsubscribe = onSnapshot(doc(db, 'baby_profiles', auth.currentUser.uid), (docSnapshot) => {
+        if (docSnapshot.exists() && docSnapshot.data().name) {
+          setBabyName(docSnapshot.data().name);
+        }
+      });
+    }
+
+    // 2. Listen to the current system status document
     const statusUnsubscribe = onSnapshot(doc(db, 'system_status', 'current'), (docSnapshot) => {
       if (docSnapshot.exists()) {
         const data = docSnapshot.data() as SystemStatus;
@@ -24,7 +35,7 @@ export default function Dashboard() {
       setIsLoading(false);
     });
 
-    // Listen to recent cry events collection in Firestore
+    // 3. Listen to recent cry events collection
     const eventsQuery = query(
       collection(db, 'cry_events'),
       orderBy('detected_at', 'desc'),
@@ -41,6 +52,7 @@ export default function Dashboard() {
 
     // Cleanup listeners on unmount
     return () => {
+      profileUnsubscribe();
       statusUnsubscribe();
       eventsUnsubscribe();
     };
@@ -104,8 +116,9 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-            Baby Monitor Dashboard
+          {/* Dynamically display the baby's name here */}
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2 capitalize">
+            {babyName ? `${babyName}'s Dashboard` : 'Baby Monitor Dashboard'}
           </h1>
           <p className="text-gray-600">Real-time monitoring system</p>
         </div>
@@ -165,7 +178,6 @@ export default function Dashboard() {
             <div className="space-y-3">
               {recentEvents.map((event) => {
                 const eventConfig = getStatusConfig(event.status);
-                // Ensure eventConfig is defined before trying to access its icon
                 if (!eventConfig) return null; 
                 const EventIcon = eventConfig.icon;
                 return (
