@@ -2,13 +2,14 @@
 import { useEffect, useState } from 'react';
 import { Baby, Volume2, Moon, Bell } from 'lucide-react';
 import { collection, query, orderBy, limit, onSnapshot, doc } from 'firebase/firestore';
-import { db, auth } from '../lib/firebase'; // Added auth import
+import { db, auth } from '../lib/firebase';
 import type { SystemStatus, CryEvent, BabyStatus } from '../types/database';
+import LocalMonitor from './LocalMonitor'; // <-- Added LocalMonitor import
 
 export default function Dashboard() {
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [recentEvents, setRecentEvents] = useState<CryEvent[]>([]);
-  const [babyName, setBabyName] = useState<string | null>(null); // New state for baby name
+  const [babyName, setBabyName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showAlert, setShowAlert] = useState(false);
 
@@ -116,13 +117,13 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          {/* Dynamically display the baby's name here */}
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2 capitalize">
             {babyName ? `${babyName}'s Dashboard` : 'Baby Monitor Dashboard'}
           </h1>
           <p className="text-gray-600">Real-time monitoring system</p>
         </div>
 
+        {/* Top Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <div className={`bg-white rounded-xl shadow-lg p-6 border-4 ${config?.borderColor}`}>
             <div className="flex items-center justify-between mb-4">
@@ -170,45 +171,56 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Recent Events</h2>
-          {recentEvents.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No events recorded yet</p>
-          ) : (
-            <div className="space-y-3">
-              {recentEvents.map((event) => {
-                const eventConfig = getStatusConfig(event.status);
-                if (!eventConfig) return null; 
-                const EventIcon = eventConfig.icon;
-                return (
-                  <div
-                    key={event.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className={`p-2 rounded-full ${eventConfig.color}`}>
-                        <EventIcon className="w-5 h-5" />
+        {/* Local TFLite Monitor and Recent Events Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* AI Monitor Section */}
+          <div>
+            <LocalMonitor />
+          </div>
+
+          {/* Recent Events Section */}
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Recent Events</h2>
+            {recentEvents.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No events recorded yet</p>
+            ) : (
+              <div className="space-y-3">
+                {recentEvents.map((event) => {
+                  const eventConfig = getStatusConfig(event.status);
+                  if (!eventConfig) return null; 
+                  const EventIcon = eventConfig.icon;
+                  return (
+                    <div
+                      key={event.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className={`p-2 rounded-full ${eventConfig.color}`}>
+                          <EventIcon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-800">{eventConfig.label}</p>
+                          <p className="text-sm text-gray-500">
+                            {formatDate(event.detected_at)}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-800">{eventConfig.label}</p>
-                        <p className="text-sm text-gray-500">
-                          {formatDate(event.detected_at)}
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-700">
+                          Intensity: {event.intensity}%
                         </p>
+                        {event.duration > 0 && (
+                          <p className="text-xs text-gray-500">{event.duration}s</p>
+                        )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-700">
-                        Intensity: {event.intensity}%
-                      </p>
-                      {event.duration > 0 && (
-                        <p className="text-xs text-gray-500">{event.duration}s</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </div>

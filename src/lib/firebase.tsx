@@ -1,8 +1,8 @@
-// src/lib/firebase.tsx
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore"; // Added Firestore import
+import { getFirestore } from "firebase/firestore";
+import { getMessaging } from "firebase/messaging"; // <-- Add this import
 
 const firebaseConfig = {
   apiKey: "AIzaSyBUqLVDlNGP6uzDBoxPkxUWFLVY7y5ICtM",
@@ -18,4 +18,5 @@ const app = initializeApp(firebaseConfig);
 
 export const analytics = getAnalytics(app);
 export const auth = getAuth(app);
-export const db = getFirestore(app); // Export Firestore database instance
+export const db = getFirestore(app);
+export const messaging = getMessaging(app); // <-- Export messaging
