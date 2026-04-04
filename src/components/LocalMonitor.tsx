@@ -22,7 +22,7 @@ export default function LocalMonitor() {
   
   // Media Refs
   const streamRef = useRef<MediaStream | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const intervalRef = useRef<number | null>(null);
   
   // Session Tracking Refs
   const startTimeRef = useRef<number>(0);
@@ -79,22 +79,42 @@ export default function LocalMonitor() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
-      // Use MediaRecorder to capture audio chunks
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-
-      mediaRecorder.ondataavailable = async (e) => {
-        if (e.data.size > 0) {
-          await sendAudioToAPI(e.data, 'mic_chunk.webm');
-        }
-      };
-
       resetSession();
       setMonitorMode('mic');
       setIsMonitoring(true);
+
+      // Function to record exactly 5 seconds as a standalone file with headers
+      const recordStandaloneChunk = () => {
+        if (!stream.active) return;
+        
+        const mediaRecorder = new MediaRecorder(stream);
+        const chunks: Blob[] = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) chunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const completeBlob = new Blob(chunks, { type: 'audio/webm' });
+          await sendAudioToAPI(completeBlob, 'mic_chunk.webm');
+        };
+
+        mediaRecorder.start();
+        
+        // Stop the recorder after 5 seconds to finalize the file
+        setTimeout(() => {
+          if (mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+          }
+        }, 5000);
+      };
+
+      // Start the very first chunk immediately
+      recordStandaloneChunk();
       
-      // Record in 5-second intervals and fire the ondataavailable event
-      mediaRecorder.start(5000); 
+      // Then trigger a new standalone chunk every 5 seconds
+      intervalRef.current = window.setInterval(recordStandaloneChunk, 5000);
+
     } catch (err) {
       console.error("Error accessing mic:", err);
     }
@@ -109,7 +129,6 @@ export default function LocalMonitor() {
     setIsMonitoring(true);
     setIsProcessingFile(true);
 
-    // Send the whole file to the backend
     await sendAudioToAPI(selectedFile, selectedFile.name);
 
     setIsProcessingFile(false);
@@ -120,8 +139,15 @@ export default function LocalMonitor() {
     if (!isMonitoring) return;
 
     if (monitorMode === 'mic') {
-      mediaRecorderRef.current?.stop();
-      streamRef.current?.getTracks().forEach(track => track.stop());
+      // Clear the 5-second recording loop
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      // Stop all microphone tracks
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
     }
     
     setIsMonitoring(false);
@@ -149,6 +175,7 @@ export default function LocalMonitor() {
         status: 'crying',
         duration: 0 
       });
+      console.log("Logged Cry Event to Firebase:", probability);
     } catch (err) {
       console.error("Error logging cry:", err);
     }
