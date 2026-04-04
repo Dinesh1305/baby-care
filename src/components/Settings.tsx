@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Settings as SettingsIcon, Wifi, Bell, Info, Code } from 'lucide-react';
 
 export default function Settings() {
-  const [apiEndpoint] = useState(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/baby-monitor-api`
-  );
+const [apiEndpoint] = useState(
+  import.meta.env.VITE_API_URL || "http://localhost:8000"
+);
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     Notification.permission === 'granted'
   );
