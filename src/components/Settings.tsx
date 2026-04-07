@@ -24,7 +24,7 @@ export default function Settings() {
       setTimeRemaining((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
-    // State Machine Loop
+    // State Machine Loop - Every phase is exactly 10 seconds
     if (demoState === 'sleeping') {
       setTimeRemaining(10);
       timeoutId = setTimeout(() => setDemoState('crying'), 10000);
@@ -72,8 +72,8 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 md:p-8">
-      
-      {/* ── Custom Animations for Full-Body Simulator ── */}
+
+      {/* ── Custom Animations for Top-Down Simulator ── */}
       <style>{`
         @keyframes floatUp {
           0% { transform: translateY(0) scale(0.8); opacity: 0; }
@@ -81,52 +81,74 @@ export default function Settings() {
           100% { transform: translateY(-30px) scale(1.2) translateX(10px); opacity: 0; }
         }
         @keyframes floatNoteRight {
-          0% { transform: translateY(0) translateX(0) scale(0.5) rotate(-15deg); opacity: 0; }
-          20% { opacity: 1; transform: translateY(-10px) translateX(25px) scale(1) rotate(0deg); }
-          100% { transform: translateY(-30px) translateX(90px) scale(1.3) rotate(20deg); opacity: 0; }
+          0% { transform: translate(0, 0) scale(0.5) rotate(-15deg); opacity: 0; }
+          20% { opacity: 1; transform: translate(25px, -15px) scale(1) rotate(0deg); }
+          100% { transform: translate(80px, -40px) scale(1.3) rotate(20deg); opacity: 0; }
         }
-        @keyframes tearDrop {
-          0% { transform: translateY(0); opacity: 1; }
-          100% { transform: translateY(15px); opacity: 0; }
+        @keyframes tearDropLeft {
+          0% { transform: translate(0, 0); opacity: 1; }
+          100% { transform: translate(-10px, 5px); opacity: 0; }
+        }
+        @keyframes tearDropRight {
+          0% { transform: translate(0, 0); opacity: 1; }
+          100% { transform: translate(10px, 5px); opacity: 0; }
         }
         @keyframes breathe {
           0%, 100% { transform: scaleY(1) scaleX(1); }
-          50% { transform: scaleY(0.95) scaleX(1.02); }
+          50% { transform: scaleY(0.95) scaleX(1.03); }
         }
-        @keyframes flailArm {
-          0%, 100% { transform: rotate(-25deg); }
-          50% { transform: rotate(15deg); }
+        @keyframes rockCradleTopDown {
+          0%, 100% { transform: translateX(-4px) rotate(-1deg); }
+          50% { transform: translateX(4px) rotate(1deg); }
         }
-        @keyframes flailLeg {
-          0%, 100% { transform: rotate(-20deg); }
-          50% { transform: rotate(20deg); }
+        @keyframes flailArmLeft {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(-30deg); }
+        }
+        @keyframes flailArmRight {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(30deg); }
+        }
+        @keyframes flailLegLeft {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(25deg); }
+        }
+        @keyframes flailLegRight {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(-25deg); }
         }
         @keyframes shakeHead {
-          0%, 100% { transform: rotate(-5deg); }
-          50% { transform: rotate(5deg); }
+          0%, 100% { transform: translateX(-1px) rotate(-2deg); }
+          50% { transform: translateX(1px) rotate(2deg); }
+        }
+        @keyframes soundWave {
+          0% { opacity: 0.8; transform: scale(1); }
+          100% { opacity: 0; transform: scale(1.5); }
         }
 
-        .animate-float-1 { animation: floatUp 2s ease-in infinite; }
-        .animate-float-2 { animation: floatUp 2.5s ease-in infinite 0.5s; }
-        .animate-float-3 { animation: floatUp 2.2s ease-in infinite 1s; }
+        .animate-float-1 { animation: floatUp 2.5s ease-in infinite; }
+        .animate-float-2 { animation: floatUp 3s ease-in infinite 0.5s; }
+        .animate-float-3 { animation: floatUp 2.8s ease-in infinite 1s; }
         
-        .animate-float-note-1 { animation: floatNoteRight 2s ease-in infinite; }
-        .animate-float-note-2 { animation: floatNoteRight 2.5s ease-in infinite 0.5s; }
-        .animate-float-note-3 { animation: floatNoteRight 2.2s ease-in infinite 1s; }
+        .animate-float-note-1 { animation: floatNoteRight 2.5s ease-in infinite; }
+        .animate-float-note-2 { animation: floatNoteRight 3s ease-in infinite 0.7s; }
+        .animate-float-note-3 { animation: floatNoteRight 2.8s ease-in infinite 1.4s; }
         
-        .animate-tear { animation: tearDrop 0.8s ease-in infinite; }
-        .animate-breathe { animation: breathe 3s ease-in-out infinite; }
-        
-        /* State Utility Classes */
-        .arm-sleep { transform: rotate(35deg); transition: transform 1s ease-in-out; }
-        .arm-cry { animation: flailArm 0.3s infinite; }
-        .arm-soothe { transform: rotate(15deg); transition: transform 1s ease-in-out; }
+        .animate-tear-l { animation: tearDropLeft 0.8s ease-in infinite; }
+        .animate-tear-r { animation: tearDropRight 0.8s ease-in infinite; }
 
-        .leg-sleep { transform: rotate(5deg); transition: transform 1s ease-in-out; }
-        .leg-cry { animation: flailLeg 0.3s infinite alternate; }
-        .leg-soothe { transform: rotate(0deg); transition: transform 1s ease-in-out; }
+        .animate-breathe { animation: breathe 3s ease-in-out infinite; transform-origin: 35px 53px; }
+        .animate-rock-td { animation: rockCradleTopDown 2.5s ease-in-out infinite; transform-origin: 35px 55px; }
         
-        .head-cry { animation: shakeHead 0.3s infinite; }
+        .arm-cry-l { animation: flailArmLeft 0.3s infinite alternate; transform-origin: 24px 42px; }
+        .arm-cry-r { animation: flailArmRight 0.3s infinite alternate; transform-origin: 46px 42px; }
+        .leg-cry-l { animation: flailLegLeft 0.3s infinite alternate; transform-origin: 28px 65px; }
+        .leg-cry-r { animation: flailLegRight 0.3s infinite alternate; transform-origin: 42px 65px; }
+        .head-cry { animation: shakeHead 0.3s infinite alternate; transform-origin: 35px 25px; }
+
+        .wave-1 { animation: soundWave 2s ease-out infinite; transform-origin: 30px 40px; }
+        .wave-2 { animation: soundWave 2s ease-out infinite 0.6s; transform-origin: 30px 40px; }
+        .wave-3 { animation: soundWave 2s ease-out infinite 1.2s; transform-origin: 30px 40px; }
       `}</style>
 
       <div className="max-w-4xl mx-auto">
@@ -165,128 +187,162 @@ export default function Settings() {
                 {demoState === 'soothing' && <span className="flex items-center text-purple-600 font-bold"><Music className="w-5 h-5 mr-2 animate-bounce"/> Speaker Soothing... ({timeRemaining}s)</span>}
               </div>
 
-              {/* Animated SVG Scene */}
-              <div className="relative w-full max-w-lg aspect-[21/9]">
-                <svg viewBox="0 0 200 120" className="w-full h-full drop-shadow-md overflow-visible">
-                  
-                  {/* ─── 1. BLUETOOTH SMART SPEAKER ─── */}
-                  <g transform="translate(20, 68)">
-                    {/* Speaker Drop Shadow */}
-                    <ellipse cx="14" cy="40" rx="16" ry="4" fill="#94a3b8" opacity="0.4" />
+              {/* Animated SVG Scene - Top Down View */}
+              <div className="relative w-full max-w-lg aspect-[21/9] flex justify-center items-center">
+                <svg viewBox="0 0 260 140" className="w-full h-full drop-shadow-sm overflow-visible">
+
+                  {/* ─── 1. SMART SPEAKER (Top-Down Cylinder) ─── */}
+                  <g transform="translate(45, 45)">
                     
-                    {/* Device Chassis */}
-                    <rect x="0" y="8" width="28" height="32" rx="4" fill="#1e293b" />
-                    <rect x="2" y="10" width="24" height="28" rx="2" fill="#334155" />
-                    
-                    {/* Speaker Grill Dots */}
-                    <g fill="#0f172a" opacity="0.4">
-                      {[14, 18, 22, 26, 30].map(y => (
-                        [6, 10, 14, 18, 22].map(x => (
-                          <circle key={`dot-${x}-${y}`} cx={x} cy={y} r="1" />
-                        ))
-                      ))}
-                    </g>
-                    
-                    {/* Top Control Panel */}
-                    <path d="M 0 8 Q 14 -3 28 8 Z" fill="#0f172a" />
-                    
-                    {/* Glowing LED Ring (Pulses when active) */}
-                    <ellipse 
-                      cx="14" cy="5" rx="9" ry="2" fill="none" 
-                      stroke={demoState === 'soothing' ? "#c084fc" : "#475569"} 
-                      strokeWidth="1.5" 
-                      className={demoState === 'soothing' ? "animate-pulse" : "transition-colors duration-500"} 
-                    />
-                    
-                    {/* Directional Sound Waves hitting the baby */}
+                    {/* Pulsing Sound Waves behind speaker */}
                     {demoState === 'soothing' && (
-                      <g stroke="#c084fc" strokeWidth="2.5" strokeLinecap="round" fill="none" className="animate-pulse">
-                        <path d="M 32 15 Q 36 20 32 25" />
-                        <path d="M 37 10 Q 44 20 37 30" opacity="0.8"/>
-                        <path d="M 42 5 Q 52 20 42 35" opacity="0.5"/>
+                      <g stroke="#c084fc" strokeWidth="2" fill="none">
+                        <circle cx="30" cy="40" r="22" className="wave-1" />
+                        <circle cx="30" cy="40" r="22" className="wave-2" />
+                        <circle cx="30" cy="40" r="22" className="wave-3" />
                       </g>
                     )}
+
+                    {/* Speaker Drop Shadow */}
+                    <ellipse cx="30" cy="65" rx="20" ry="8" fill="#94a3b8" opacity="0.4" />
+
+                    {/* Cylinder Body */}
+                    <rect x="10" y="40" width="40" height="25" fill="#1e293b" />
+                    <ellipse cx="30" cy="65" rx="20" ry="6" fill="#1e293b" />
+                    <ellipse cx="30" cy="40" rx="20" ry="6" fill="#334155" />
+
+                    {/* Glowing LED Ring */}
+                    <ellipse 
+                      cx="30" cy="40" rx="16" ry="4" fill="none" 
+                      stroke={demoState === 'soothing' ? "#3b82f6" : "#475569"} 
+                      strokeWidth="2.5" 
+                      className={demoState === 'soothing' ? "animate-pulse" : "transition-colors duration-500"} 
+                    />
+
+                    {/* Center buttons/mic holes */}
+                    <circle cx="26" cy="40" r="1" fill="#0f172a" />
+                    <circle cx="34" cy="40" r="1" fill="#0f172a" />
+                    <circle cx="30" cy="37" r="1" fill="#0f172a" />
+                    <circle cx="30" cy="43" r="1" fill="#0f172a" />
                   </g>
 
-                  {/* ─── 2. BABY LYING ON BACK (Floor Level) ─── */}
-                  <g transform="translate(15, 18)">
-                    
-                    {/* Baby Ground shadow (Aligns perfectly with speaker floor) */}
-                    <ellipse cx="120" cy="90" rx="45" ry="5" fill="#94a3b8" opacity="0.4" />
+                  {/* ─── 2. WOODEN CRADLE & BABY (Top-Down) ─── */}
+                  <g transform="translate(130, 15)">
 
-                    <g className="baby-on-back">
+                    {/* Cradle Ground Shadow */}
+                    <ellipse cx="35" cy="55" rx="45" ry="60" fill="#94a3b8" opacity="0.3" />
+
+                    {/* Rocking Cradle Group */}
+                    <g className={demoState === 'soothing' ? 'animate-rock-td' : 'transition-transform duration-1000'}>
                       
-                      {/* Back Arm (Left Arm) */}
-                      <g className={demoState === 'sleeping' ? 'arm-sleep' : (demoState === 'crying' ? 'arm-cry' : 'arm-soothe')} style={{ transformOrigin: '120px 70px' }}>
-                        <path d="M 120 70 L 130 50 L 135 55" fill="none" stroke="#f07598" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
-                      </g>
+                      {/* Top & Bottom Rocker Arcs */}
+                      <path d="M -10 10 Q 35 -5 80 10" fill="none" stroke="#bc8f8f" strokeWidth="6" strokeLinecap="round" />
+                      <path d="M -10 100 Q 35 115 80 100" fill="none" stroke="#bc8f8f" strokeWidth="6" strokeLinecap="round" />
 
-                      {/* Back Leg (Left Leg) */}
-                      <g className={demoState === 'sleeping' ? 'leg-sleep' : (demoState === 'crying' ? 'leg-cry' : 'leg-soothe')} style={{ transformOrigin: '145px 72px' }}>
-                        <path d="M 145 72 L 160 55 L 170 60" fill="none" stroke="#f07598" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
-                      </g>
-                      
-                      {/* Body (Tummy facing up) */}
-                      <g className={demoState === 'sleeping' ? 'animate-breathe' : ''} style={{ transformOrigin: '125px 75px' }}>
-                        <ellipse cx="125" cy="76" rx="26" ry="14" fill="#ff8fab"/>
-                        {/* Diaper */}
-                        <path d="M 135 62 Q 155 62 151 90 Q 125 90 135 62 Z" fill="#ffffff" />
-                      </g>
+                      {/* Motion indicators for rocking */}
+                      {demoState === 'soothing' && (
+                        <g stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.6">
+                          <path d="M -20 105 Q -25 110 -20 115" />
+                          <path d="M -25 105 Q -30 110 -25 115" />
+                          <path d="M 90 105 Q 95 110 90 115" />
+                          <path d="M 95 105 Q 100 110 95 115" />
+                        </g>
+                      )}
 
-                      {/* Front Arm (Right Arm) */}
-                      <g className={demoState === 'sleeping' ? 'arm-sleep' : (demoState === 'crying' ? 'arm-cry' : 'arm-soothe')} style={{ transformOrigin: '115px 75px', animationDelay: '0.1s' }}>
-                        <path d="M 115 75 L 125 55 L 115 50" fill="none" stroke="#ff8fab" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round"/>
-                        <circle cx="115" cy="50" r="4.5" fill="#ffe4e1"/>
-                      </g>
+                      {/* Main Wooden Frame */}
+                      <rect x="0" y="10" width="70" height="90" fill="#deb887" stroke="#8b4513" strokeWidth="4" rx="3" />
 
-                      {/* Front Leg (Right Leg) */}
-                      <g className={demoState === 'sleeping' ? 'leg-sleep' : (demoState === 'crying' ? 'leg-cry' : 'leg-soothe')} style={{ transformOrigin: '140px 75px', animationDelay: '0.1s' }}>
-                        <path d="M 140 75 L 155 50 L 165 50" fill="none" stroke="#ff8fab" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round"/>
-                        <ellipse cx="165" cy="50" rx="5" ry="4" fill="#ffe4e1"/>
-                      </g>
+                      {/* Mattress / Sheet */}
+                      <rect x="5" y="15" width="60" height="80" fill="#f8fafc" rx="2" />
 
-                      {/* Head resting on the left side */}
-                      <g className={demoState === 'crying' ? 'head-cry' : ''} style={{ transformOrigin: '85px 65px' }}>
-                        <circle cx="85" cy="65" r="20" fill="#ffe4e1"/>
-                        <circle cx="75" cy="68" r="4.5" fill="#ffbfa8" opacity="0.6"/> {/* Left cheek */}
-                        <circle cx="100" cy="68" r="4.5" fill="#ffbfa8" opacity="0.6"/> {/* Right cheek */}
-                        <circle cx="67" cy="65" r="4" fill="#ffbfa8"/> {/* Ear */}
+                      {/* Mattress contour line */}
+                      <rect x="8" y="18" width="54" height="74" fill="none" stroke="#e2e8f0" strokeWidth="1" rx="2" />
 
-                        {/* Eyes */}
-                        {demoState === 'sleeping' && (
-                          <g stroke="#1e1e1e" strokeWidth="1.5" strokeLinecap="round" fill="none">
-                            <path d="M 75 60 Q 80 63 85 60" />
-                            <path d="M 93 60 Q 98 63 103 60" />
+                      {/* ── BABY (Top-Down view, lying on back) ── */}
+                      <g>
+                        
+                        {/* Arms */}
+                        <g className={demoState === 'crying' ? 'arm-cry-l' : 'transition-transform duration-700'} style={{ transformOrigin: '24px 42px' }}>
+                          <path d="M 24 42 Q 12 40 12 30" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" fill="none" />
+                          <circle cx="12" cy="28" r="3.5" fill="#8b5a2b" /> {/* Left Hand */}
+                        </g>
+                        <g className={demoState === 'crying' ? 'arm-cry-r' : 'transition-transform duration-700'} style={{ transformOrigin: '46px 42px' }}>
+                          <path d="M 46 42 Q 58 40 58 30" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" fill="none" />
+                          <circle cx="58" cy="28" r="3.5" fill="#8b5a2b" /> {/* Right Hand */}
+                        </g>
+
+                        {/* Legs */}
+                        <g className={demoState === 'crying' ? 'leg-cry-l' : 'transition-transform duration-700'} style={{ transformOrigin: '28px 65px' }}>
+                          <path d="M 28 65 Q 20 80 18 76" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" fill="none" />
+                          <circle cx="18" cy="76" r="4.5" fill="#ef4444" /> {/* Left Foot */}
+                        </g>
+                        <g className={demoState === 'crying' ? 'leg-cry-r' : 'transition-transform duration-700'} style={{ transformOrigin: '42px 65px' }}>
+                          <path d="M 42 65 Q 50 80 52 76" stroke="#ef4444" strokeWidth="8" strokeLinecap="round" fill="none" />
+                          <circle cx="52" cy="76" r="4.5" fill="#ef4444" /> {/* Right Foot */}
+                        </g>
+
+                        {/* Torso (Red Onesie) */}
+                        <g className={demoState === 'sleeping' ? 'animate-breathe' : ''}>
+                          <rect x="23" y="38" width="24" height="30" rx="10" fill="#ef4444" />
+                          <path d="M 23 60 Q 35 68 47 60" fill="none" stroke="#dc2626" strokeWidth="1.5" /> {/* Diaper fold line */}
+                        </g>
+
+                        {/* Head */}
+                        <g className={demoState === 'crying' ? 'head-cry' : 'transition-transform duration-700'}>
+                          <circle cx="35" cy="25" r="14" fill="#8b5a2b" />
+                          
+                          {/* Curly Hair (Dark overlapping circles) */}
+                          <g fill="#1a110b">
+                            <circle cx="25" cy="16" r="4" />
+                            <circle cx="30" cy="13" r="4.5" />
+                            <circle cx="35" cy="12" r="5" />
+                            <circle cx="40" cy="13" r="4.5" />
+                            <circle cx="45" cy="16" r="4" />
+                            <circle cx="23" cy="22" r="3.5" />
+                            <circle cx="47" cy="22" r="3.5" />
                           </g>
-                        )}
-                        {demoState === 'crying' && (
-                          <g stroke="#1e1e1e" strokeWidth="1.5" strokeLinecap="round" fill="none">
-                            <path d="M 75 62 L 85 58 M 75 58 L 85 62" /> 
-                            <path d="M 93 62 L 103 58 M 93 58 L 103 62" /> 
-                            {/* Tears falling to the side */}
-                            <circle cx="80" cy="72" r="2" fill="#60a5fa" className="animate-tear" />
-                            <circle cx="98" cy="72" r="2" fill="#60a5fa" className="animate-tear" style={{ animationDelay: '0.3s' }} />
-                          </g>
-                        )}
-                        {demoState === 'soothing' && (
-                          <g fill="#1e1e1e">
-                            <circle cx="78" cy="60" r="2.5" />
-                            <circle cx="96" cy="60" r="2.5" />
-                            <path d="M 75 56 Q 80 54 85 56" fill="none" stroke="#1e1e1e" strokeWidth="1.5" strokeLinecap="round"/>
-                            <path d="M 93 56 Q 98 54 103 56" fill="none" stroke="#1e1e1e" strokeWidth="1.5" strokeLinecap="round"/>
-                          </g>
-                        )}
 
-                        {/* Mouth */}
-                        {demoState === 'sleeping' && (
-                          <path d="M 87 75 Q 90 77 93 75" fill="none" stroke="#1e1e1e" strokeWidth="1.5" strokeLinecap="round" />
-                        )}
-                        {demoState === 'crying' && (
-                          <path d="M 85 70 Q 90 82 95 70 Z" fill="#7a1a2b" stroke="#1e1e1e" strokeWidth="1" />
-                        )}
-                        {demoState === 'soothing' && (
-                          <circle cx="90" cy="73" r="2" fill="#1e1e1e" /> 
-                        )}
+                          {/* Ears */}
+                          <circle cx="20" cy="26" r="3" fill="#6b4423" />
+                          <circle cx="50" cy="26" r="3" fill="#6b4423" />
+
+                          {/* Face Details */}
+                          {demoState === 'sleeping' && (
+                            <g stroke="#3e2723" strokeWidth="1.5" fill="none" strokeLinecap="round">
+                              {/* Closed eyes */}
+                              <path d="M 28 25 Q 31 27 33 25" />
+                              <path d="M 37 25 Q 40 27 42 25" />
+                              {/* Soft smile */}
+                              <path d="M 33 31 Q 35 33 37 31" /> 
+                            </g>
+                          )}
+                          
+                          {demoState === 'crying' && (
+                            <g>
+                              {/* Squinted crying eyes >< */}
+                              <g stroke="#3e2723" strokeWidth="1.5" fill="none" strokeLinecap="round">
+                                <path d="M 28 24 L 32 26 M 28 26 L 32 24" />
+                                <path d="M 38 24 L 42 26 M 38 26 L 42 24" />
+                              </g>
+                              {/* Tears splashing sideways */}
+                              <circle cx="25" cy="28" r="1.5" fill="#60a5fa" className="animate-tear-l" />
+                              <circle cx="45" cy="28" r="1.5" fill="#60a5fa" className="animate-tear-r" style={{animationDelay: '0.2s'}} />
+                              {/* Open wailing mouth */}
+                              <circle cx="35" cy="32" r="2.5" fill="#7a1a2b" />
+                            </g>
+                          )}
+
+                          {demoState === 'soothing' && (
+                            <g>
+                              {/* Eyes open, looking left toward the speaker */}
+                              <ellipse cx="30" cy="25" rx="1.5" ry="2" fill="#1a110b" />
+                              <ellipse cx="39" cy="25" rx="1.5" ry="2" fill="#1a110b" />
+                              {/* Little 'o' mouth listening */}
+                              <circle cx="35" cy="32" r="1.5" fill="#3e2723" />
+                            </g>
+                          )}
+                        </g>
+
                       </g>
                     </g>
                   </g>
@@ -294,19 +350,19 @@ export default function Settings() {
 
                 {/* ─── 3. FLOATING HTML OVERLAYS (Zzzs & Music Notes) ─── */}
                 <div className="absolute inset-0 pointer-events-none">
-                  
-                  {/* Sleeping Zzzs coming from the baby */}
+
+                  {/* Sleeping Zzzs coming from the cradle */}
                   {demoState === 'sleeping' && (
-                    <div className="absolute right-[25%] top-[15%] w-24 h-24">
+                    <div className="absolute right-[22%] top-[10%] w-24 h-24">
                       <span className="absolute bottom-0 right-10 text-2xl font-black text-blue-400 animate-float-1 opacity-0">Z</span>
                       <span className="absolute bottom-6 right-4 text-xl font-bold text-blue-400 animate-float-2 opacity-0">z</span>
                       <span className="absolute top-4 right-0 text-lg font-bold text-blue-400 animate-float-3 opacity-0">z</span>
                     </div>
                   )}
-                  
+
                   {/* Soothing Notes coming from the Bluetooth Speaker */}
                   {demoState === 'soothing' && (
-                    <div className="absolute left-[15%] top-[50%] w-full h-32">
+                    <div className="absolute left-[30%] top-[45%] w-full h-32">
                       <span className="absolute bottom-8 left-0 text-3xl text-purple-500 animate-float-note-1 opacity-0 inline-block drop-shadow-sm">🎵</span>
                       <span className="absolute bottom-4 left-6 text-2xl text-purple-400 animate-float-note-2 opacity-0 inline-block drop-shadow-sm">🎶</span>
                       <span className="absolute bottom-12 left-2 text-xl text-purple-600 animate-float-note-3 opacity-0 inline-block drop-shadow-sm">🎵</span>
@@ -333,6 +389,7 @@ export default function Settings() {
               </div>
             </div>
           </div>
+
 
           {/* ═════════════════════════════════════════════════════════════════
               EXISTING SETTINGS (Notifications, IoT, System)
