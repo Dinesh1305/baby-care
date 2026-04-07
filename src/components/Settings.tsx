@@ -264,11 +264,11 @@ export default function Settings() {
                         {/* Arms */}
                         <g className={demoState === 'crying' ? 'arm-cry-l' : 'transition-transform duration-700'} style={{ transformOrigin: '24px 42px' }}>
                           <path d="M 24 42 Q 12 40 12 30" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" fill="none" />
-                          <circle cx="12" cy="28" r="3.5" fill="#8b5a2b" /> {/* Left Hand */}
+                          <circle cx="12" cy="28" r="3.5" fill="#ffe0d2" /> {/* Left Hand */}
                         </g>
                         <g className={demoState === 'crying' ? 'arm-cry-r' : 'transition-transform duration-700'} style={{ transformOrigin: '46px 42px' }}>
                           <path d="M 46 42 Q 58 40 58 30" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" fill="none" />
-                          <circle cx="58" cy="28" r="3.5" fill="#8b5a2b" /> {/* Right Hand */}
+                          <circle cx="58" cy="28" r="3.5" fill="#ffe0d2" /> {/* Right Hand */}
                         </g>
 
                         {/* Legs */}
@@ -289,7 +289,7 @@ export default function Settings() {
 
                         {/* Head */}
                         <g className={demoState === 'crying' ? 'head-cry' : 'transition-transform duration-700'}>
-                          <circle cx="35" cy="25" r="14" fill="#8b5a2b" />
+                          <circle cx="35" cy="25" r="14" fill="#ffe0d2" />
                           
                           {/* Curly Hair (Dark overlapping circles) */}
                           <g fill="#1a110b">
@@ -303,8 +303,8 @@ export default function Settings() {
                           </g>
 
                           {/* Ears */}
-                          <circle cx="20" cy="26" r="3" fill="#6b4423" />
-                          <circle cx="50" cy="26" r="3" fill="#6b4423" />
+                          <circle cx="20" cy="26" r="3" fill="#ffc2a8" />
+                          <circle cx="50" cy="26" r="3" fill="#ffc2a8" />
 
                           {/* Face Details */}
                           {demoState === 'sleeping' && (
